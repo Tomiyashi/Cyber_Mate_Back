@@ -26,11 +26,12 @@ func Worker(ch <-chan models.Job) {
 		switch cmd {
 		case "start":
 			// Кнопка профиль (открывает мини-апп ВНУТРИ Телеграма)
-			profileBtn := tgbotapi.NewInlineKeyboardButtonWebApp(
-				"👤 Профиль",
-				"https://ТВОЙ_МИНИ_АПП", // ← Вставь свою реальную ссылку!
-			)
-
+			profileBtn := tgbotapi.InlineKeyboardButton{
+				Text: "👤 Профиль",
+				WebApp: &tgbotapi.WebAppInfo{
+					URL: "https://твой-mini-app.com", // ← Обязательно HTTPS!
+				},
+			}
 			// Остальные кнопки
 			modelsBtn := tgbotapi.NewInlineKeyboardButtonData("🤖 GPT/Claude/Gemini", "models")
 			designBtn := tgbotapi.NewInlineKeyboardButtonData("🎨 Дизайн с ИИ", "design_ai")
