@@ -2,7 +2,6 @@ package worker
 
 import (
 	"log"
-	"time"
 
 	"CyberMate_Back/internal/models"
 
@@ -52,27 +51,11 @@ func Worker(ch <-chan models.Job) {
 			}
 
 		case "👤 Профиль":
-			// Отправляем временное сообщение
-			tempMsg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, "🚀 Профиль открывается...")
-			tempMsg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true) // Убираем клавиатуру
-
-			sentMsg, err := job.Bot.Send(tempMsg)
-			if err != nil {
-				log.Println("Ошибка отправки сообщения:", err)
-				return
+			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, "🚀 Профиль открывается...")
+			msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
+			if _, err := job.Bot.Send(msg); err != nil {
+				log.Println("Ошибка отправки подтверждения профиля:", err)
 			}
-
-			// Запускаем горутину для удаления сообщения через 2 секунды
-			go func(chatID int64, messageID int) {
-				time.Sleep(2 * time.Second)
-				_, err := job.Bot.Request(tgbotapi.DeleteMessage{
-					ChatID:    chatID,
-					MessageID: messageID,
-				})
-				if err != nil {
-					log.Println("Ошибка удаления сообщения:", err)
-				}
-			}(job.Update.Message.Chat.ID, sentMsg.MessageID)
 
 		case "🤖 GPT/Claude/Gemini":
 			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, "🤖 Доступные модели:\n• GPT-4\n• Claude 3\n• Gemini Pro")
