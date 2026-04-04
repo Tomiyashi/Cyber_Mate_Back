@@ -24,18 +24,14 @@ func Worker(ch <-chan models.Job) {
 			btn1.WebApp = &tgbotapi.WebAppInfo{
 				URL: "https://твой-mini-app.com",
 			}
-			btn2 := tgbotapi.NewKeyboardButton("🤖 GPT/Claude/Gemini")
-			btn3 := tgbotapi.NewKeyboardButton("🎨 Дизайн с ИИ")
-			btn4 := tgbotapi.NewKeyboardButton("🎵 Аудио с ИИ")
-			btn5 := tgbotapi.NewKeyboardButton("📚 База знаний")
+			btn2 := tgbotapi.NewKeyboardButton("🤖 Нейросети")
+			btn3 := tgbotapi.NewKeyboardButton("🛟 Помощь")
 
 			row1 := []tgbotapi.KeyboardButton{btn1}
-			row2 := []tgbotapi.KeyboardButton{btn2}
-			row3 := []tgbotapi.KeyboardButton{btn3, btn4}
-			row4 := []tgbotapi.KeyboardButton{btn5}
+			row2 := []tgbotapi.KeyboardButton{btn2, btn3}
 
 			keyboard := tgbotapi.ReplyKeyboardMarkup{
-				Keyboard:       [][]tgbotapi.KeyboardButton{row1, row2, row3, row4},
+				Keyboard:       [][]tgbotapi.KeyboardButton{row1, row2},
 				ResizeKeyboard: true,
 			}
 
@@ -57,29 +53,55 @@ func Worker(ch <-chan models.Job) {
 				log.Println("Ошибка отправки подтверждения профиля:", err)
 			}
 
-		case "🤖 GPT/Claude/Gemini":
-			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, "🤖 Доступные модели:\n• GPT-4\n• Claude 3\n• Gemini Pro")
+		case "🤖 Нейросети":
+			keyboard := models.GetNeuroKeyboard()
+
+			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, "🧠 Выбери нейросеть:")
+			msg.ReplyMarkup = keyboard
+
 			if _, err := job.Bot.Send(msg); err != nil {
-				log.Println(err)
+				log.Println("Ошибка отправки меню нейросетей:", err)
 			}
+		case "🛟 Помощь":
+			// Отправляем сообщение с поддержкой
+			msg := tgbotapi.NewMessage(
+				job.Update.Message.Chat.ID,
+				"🛟 Служба поддержки:\nНапиши нам: @CyberMate_Support",
+			)
+			msg.ReplyMarkup = models.GetSupportKeyboard()
+
+			if _, err := job.Bot.Send(msg); err != nil {
+				log.Println("Ошибка отправки сообщения поддержки:", err)
+			}
+
 		case "🎨 Дизайн с ИИ":
 			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, "🎨 Дизайн с ИИ — в разработке 🚧")
 			if _, err := job.Bot.Send(msg); err != nil {
 				log.Println(err)
 			}
-		case "🎵 Аудио с ИИ":
-			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, "🎵 Аудио с ИИ — в разработке 🚧")
+
+		case "💬 Написать в поддержку":
+			msg := tgbotapi.NewMessage(
+				job.Update.Message.Chat.ID,
+				"📩 Напишите нам: @CyberMate_Support",
+			)
+
+			btn := tgbotapi.NewInlineKeyboardButtonURL("✈️ Открыть чат", "https://t.me/CyberMate_Support")
+			msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(btn))
 			if _, err := job.Bot.Send(msg); err != nil {
-				log.Println(err)
+				log.Println("Ошибка отправки ссылки:", err)
 			}
-		case "📚 База знаний":
-			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, "📚 База знаний:\n• /start — главное меню\n• /help — справка")
+
+		case "⬅️ Назад":
+			keyboard := models.GetMainKeyboard("https://твой-mini-app.com")
+			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, "🤖 Добро пожаловать в CyberMate!\nВыберите раздел:")
+			msg.ReplyMarkup = keyboard
 			if _, err := job.Bot.Send(msg); err != nil {
-				log.Println(err)
+				log.Println("Ошибка отправки меню:", err)
 			}
 
 		default:
-			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, "❓ Неизвестная команда. Напиши /help для справки.")
+			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, "❓ Неизвестная команда.")
 			if _, err := job.Bot.Send(msg); err != nil {
 				log.Println(err)
 			}
