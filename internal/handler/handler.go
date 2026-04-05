@@ -13,14 +13,18 @@ func Start(
 	bot *tgbotapi.BotAPI,
 ) {
 	for update := range updates {
-		if update.Message != nil {
-			log.Println("Получено сообщение:", update.Message.Text)
+		// Проверяем, что сообщение вообще есть
+		if update.Message == nil {
+			continue
 		}
-		if ok := update.Message.IsCommand(); ok {
-			ch <- models.Job{
-				Bot:    bot,
-				Update: update,
-			}
+
+		log.Println("Получено сообщение:", update.Message.Text)
+
+		// МЫ УБРАЛИ IsCommand(). Теперь любое сообщение (и /start, и текст кнопок)
+		// отправляется в канал воркерам на обработку.
+		ch <- models.Job{
+			Bot:    bot,
+			Update: update,
 		}
 	}
 }
