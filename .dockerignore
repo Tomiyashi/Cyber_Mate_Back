@@ -1,0 +1,15 @@
+.git
+.github
+.cursor
+bin
+tmp
+*.log
+*.out
+*.exe
+*.dll
+*.so
+*.dylib
+.env
+.env.*
+terminals
+agent-transcripts
