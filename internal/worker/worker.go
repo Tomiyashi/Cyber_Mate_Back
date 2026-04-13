@@ -23,6 +23,15 @@ func withDBTimeout() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), dbTimeout)
 }
 
+func isOneOf(text string, values ...string) bool {
+	for _, v := range values {
+		if text == v {
+			return true
+		}
+	}
+	return false
+}
+
 func Worker(ch <-chan models.Job) {
 	for job := range ch {
 		chatID := int64(0)
@@ -71,16 +80,16 @@ func Worker(ch <-chan models.Job) {
 
 			switch data {
 			case "Settings_Lang":
-				edit.Text = "🌐 Выберите язык:"
-				edit.ReplyMarkup = models.GetLanguageKeyboard()
+				edit.Text = t(lang, "🌐 Выберите язык:", "🌐 Choose language:")
+				edit.ReplyMarkup = models.GetLanguageKeyboard(lang)
 
 			case "Settings_Back", "Lang_back":
-				edit.Text = "⚙️ Настройки бота:"
-				edit.ReplyMarkup = models.GetSettingsKeyboard()
+				edit.Text = t(lang, "⚙️ Настройки бота:", "⚙️ Bot settings:")
+				edit.ReplyMarkup = models.GetSettingsKeyboard(lang)
 
 			case "Main_Back":
 				msg := tgbotapi.NewMessage(chatID, t(lang, "🤖 Добро пожаловать в CyberMate!\nВыберите раздел:", "🤖 Welcome to CyberMate!\nChoose a section:"))
-				msg.ReplyMarkup = models.GetMainKeyboard(job.MiniAppURL)
+				msg.ReplyMarkup = models.GetMainKeyboard(job.MiniAppURL, lang)
 				if _, err := job.Bot.Send(msg); err != nil {
 					log.Printf("❌ Send message error: %v", err)
 				}
@@ -98,7 +107,7 @@ func Worker(ch <-chan models.Job) {
 				} else {
 					edit.Text = "✅ Язык изменён на Русский"
 				}
-				edit.ReplyMarkup = models.GetLanguageKeyboard()
+				edit.ReplyMarkup = models.GetLanguageKeyboard("ru")
 
 			case "Lang_en":
 				ctx, cancel := withDBTimeout()
@@ -109,7 +118,7 @@ func Worker(ch <-chan models.Job) {
 				} else {
 					edit.Text = "✅ Language changed to English"
 				}
-				edit.ReplyMarkup = models.GetLanguageKeyboard()
+				edit.ReplyMarkup = models.GetLanguageKeyboard("en")
 
 			default:
 				edit.Text = "⚠️ Неизвестное действие"
@@ -142,43 +151,43 @@ func Worker(ch <-chan models.Job) {
 		switch text {
 		case "/start":
 			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, t(lang, "🤖 Добро пожаловать в CyberMate!\nВыберите раздел:", "🤖 Welcome to CyberMate!\nChoose a section:"))
-			msg.ReplyMarkup = models.GetMainKeyboard(job.MiniAppURL)
+			msg.ReplyMarkup = models.GetMainKeyboard(job.MiniAppURL, lang)
 			if _, err := job.Bot.Send(msg); err != nil {
 				log.Printf("❌ Send menu error: %v", err)
 			}
 
-		case "👤 Профиль":
+		case "👤 Профиль", "👤 Profile":
 			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, t(lang, "🚀 Профиль открывается...", "🚀 Opening profile..."))
 			msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
 			if _, err := job.Bot.Send(msg); err != nil {
 				log.Printf("❌ Send profile error: %v", err)
 			}
 
-		case "⚙️ Настройки":
-			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, "⚙️ Настройки бота:")
-			msg.ReplyMarkup = models.GetSettingsKeyboard()
+		case "⚙️ Настройки", "⚙️ Settings":
+			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, t(lang, "⚙️ Настройки бота:", "⚙️ Bot settings:"))
+			msg.ReplyMarkup = models.GetSettingsKeyboard(lang)
 			if _, err := job.Bot.Send(msg); err != nil {
 				log.Printf("❌ Send settings error: %v", err)
 			}
 
-		case "🛟 Помощь":
+		case "🛟 Помощь", "🛟 Help":
 			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, t(lang, "🛟 Служба поддержки:\nНапиши нам: @CyberMate_Support", "🛟 Support:\nWrite to us: @CyberMate_Support"))
-			msg.ReplyMarkup = models.GetSupportKeyboard()
+			msg.ReplyMarkup = models.GetSupportKeyboard(lang)
 			if _, err := job.Bot.Send(msg); err != nil {
 				log.Printf("❌ Send support error: %v", err)
 			}
 
-		case "💬 Написать в поддержку":
+		case "💬 Написать в поддержку", "💬 Contact support":
 			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, t(lang, "📩 Напишите нам: @CyberMate_Support", "📩 Write to us: @CyberMate_Support"))
-			btn := tgbotapi.NewInlineKeyboardButtonURL("✈️ Открыть чат", "https://t.me/CyberMate_Support")
+			btn := tgbotapi.NewInlineKeyboardButtonURL(t(lang, "✈️ Открыть чат", "✈️ Open chat"), "https://t.me/CyberMate_Support")
 			msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(btn))
 			if _, err := job.Bot.Send(msg); err != nil {
 				log.Printf("❌ Send link error: %v", err)
 			}
 
-		case "⬅️ Назад":
+		case "⬅️ Назад", "⬅️ Back":
 			msg := tgbotapi.NewMessage(job.Update.Message.Chat.ID, t(lang, "🤖 Добро пожаловать в CyberMate!\nВыберите раздел:", "🤖 Welcome to CyberMate!\nChoose a section:"))
-			msg.ReplyMarkup = models.GetMainKeyboard(job.MiniAppURL)
+			msg.ReplyMarkup = models.GetMainKeyboard(job.MiniAppURL, lang)
 			if _, err := job.Bot.Send(msg); err != nil {
 				log.Printf("❌ Send back menu error: %v", err)
 			}
